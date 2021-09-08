@@ -1,0 +1,60 @@
+
+bash clean
+
+if [ ! -d "./log" ]; then
+  mkdir ./log
+  echo "Create log floder for store running log"
+else
+  rm -f ./log/*
+fi
+
+#export GLOG_v=4
+
+export FLAGS_LAUNCH_BARRIER=0
+export PADDLE_TRAINER_ID=0
+export PADDLE_PSERVER_NUMS=2
+export PADDLE_TRAINERS=2
+export PADDLE_TRAINERS_NUM=${PADDLE_TRAINERS}
+
+export POD_IP=127.0.0.1
+
+# set free port if 29110 is occupied
+export PADDLE_PSERVERS_IP_PORT_LIST="127.0.0.1:29110,127.0.0.1:29013"
+export PADDLE_PSERVER_PORT_ARRAY=(29110 29013)
+
+SC="train.py"
+
+# run pserver
+export TRAINING_ROLE=PSERVER
+for((i=0;i<$PADDLE_PSERVER_NUMS;i++))
+do
+    cur_port=${PADDLE_PSERVER_PORT_ARRAY[$i]}
+    echo "PADDLE WILL START PSERVER "$cur_port
+    export PADDLE_PORT=${cur_port}
+    python -u $SC &> ./log/pserver.$i.log &
+    pss[${i}]=$!
+    echo "pserver $i $pss[${i}]"
+done
+
+sleep 2
+
+# run trainer
+export TRAINING_ROLE=TRAINER
+for((i=0;i<$PADDLE_TRAINERS;i++))
+do
+    echo "PADDLE WILL START Trainer "$i
+    PADDLE_TRAINER_ID=$i
+    python -u $SC &> ./log/worker.$i.log &
+    psw[${i}]=$!
+    echo "worker $i $psw[${i}]"
+done
+
+for pid in ${pss[*]}; do
+    wait $pid
+done
+
+for pid in ${psw[*]}; do
+    wait $pid
+done
+
+
