@@ -35,6 +35,7 @@ const (
 )
 
 const (
+	ResourceDriver = "driver"
 	ResourcePS     = "ps"
 	ResourceWorker = "worker"
 	ResourceHeter  = "heter"
@@ -42,6 +43,7 @@ const (
 
 // TrainingRole defines the role of node which will be set in environ
 var TrainingRole = map[string]string{
+	ResourceDriver: "DRIVER",
 	ResourcePS:     "PSERVER",
 	ResourceWorker: "TRAINER",
 	ResourceHeter:  "HETER",
@@ -137,6 +139,9 @@ type PaddleJobSpec struct {
 	// WithGloo indicate whether enable gloo, 0/1/2 for disable/enable for worker/enable for server
 	WithGloo *int `json:"withGloo,omitempty"`
 
+	// Driver describes the spec of driver base on pod template
+	Driver *ResourceSpec `json:"driver,omitempty"`
+
 	// PS[erver] describes the spec of server base on pod template
 	PS *ResourceSpec `json:"ps,omitempty"`
 
@@ -176,6 +181,9 @@ type PaddleJobStatus struct {
 	// PS mode is enabled when ps is set
 	// Single/Collective is enabled if ps is missing
 	Mode PaddleJobMode `json:"mode,omitempty"`
+
+	// ResourceStatues of ps
+	Driver *ResourceStatus `json:"driver,omitempty"`
 
 	// ResourceStatues of ps
 	PS *ResourceStatus `json:"ps,omitempty"`
@@ -233,6 +241,7 @@ type PaddleJob struct {
 
 func (pdj *PaddleJob) GetSpecs() map[string]*ResourceSpec {
 	return map[string]*ResourceSpec{
+		ResourceDriver: pdj.Spec.Driver,
 		ResourcePS:     pdj.Spec.PS,
 		ResourceWorker: pdj.Spec.Worker,
 		ResourceHeter:  pdj.Spec.Heter,
@@ -241,6 +250,7 @@ func (pdj *PaddleJob) GetSpecs() map[string]*ResourceSpec {
 
 func (pdj *PaddleJob) GetStatuses() map[string]*ResourceStatus {
 	return map[string]*ResourceStatus{
+		ResourceDriver: pdj.Status.Driver,
 		ResourcePS:     pdj.Status.PS,
 		ResourceWorker: pdj.Status.Worker,
 		ResourceHeter:  pdj.Status.Heter,
