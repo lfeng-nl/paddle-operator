@@ -16,6 +16,7 @@ package controllers
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 
@@ -194,6 +195,10 @@ func constructConfigMap(pdj *pdv1.PaddleJob, childPods corev1.PodList) (cm *core
 		},
 	}
 
+	if pdj.Spec.Driver != nil {
+		cm.Data["PADDLE_ETCD_ENDPOINTS"] = os.Getenv("PADDLE_ETCD_ENDPOINTS")
+		cm.Data["PADDLE_DRIVER_ENDPOINTS"] = strings.Join(resources[pdv1.ResourceDriver], ",")
+	}
 	if pdj.Spec.PS != nil {
 		cm.Data["PADDLE_PSERVERS_IP_PORT_LIST"] = strings.Join(resources[pdv1.ResourcePS], ",")
 	}
