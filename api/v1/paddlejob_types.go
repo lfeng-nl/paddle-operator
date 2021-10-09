@@ -259,6 +259,8 @@ func (pdj *PaddleJob) GetStatuses() map[string]*ResourceStatus {
 
 func (pdj *PaddleJob) SetStatus(resType string, status *ResourceStatus) {
 	switch resType {
+	case ResourceDriver:
+		pdj.Status.Driver = status
 	case ResourcePS:
 		pdj.Status.PS = status
 	case ResourceWorker:
