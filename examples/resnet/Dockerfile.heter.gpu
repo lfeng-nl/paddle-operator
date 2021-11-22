@@ -1,0 +1,21 @@
+#FROM paddlepaddle/paddle:2.1.0-gpu-cuda10.2-cudnn7
+FROM registry.baidubce.com/paddlepaddle/paddle:2.0.1-gpu-cuda11.0-cudnn8
+
+WORKDIR /app
+
+ADD . /app
+
+RUN rm -rf /usr/bin/python && ln -s /usr/bin/python3.7 /usr/bin/python
+
+RUN python -m pip install paddlepaddle_gpu-0.0.0-cp37-cp37m-linux_x86_64.whl && rm -rf paddlepaddle_gpu-0.0.0-cp37-cp37m-linux_x86_64.whl
+
+RUN python -m pip install scipy opencv-python==4.2.0.32 -i https://mirror.baidu.com/pypi/simple
+
+#RUN mkdir -p /root/.cache/paddle/dataset/flowers/ && \
+#    wget http://paddlemodels.bj.bcebos.com/flowers/102flowers.tgz -o /root/.cache/paddle/dataset/flowers/102flowers.tgz &&\
+#    wget http://paddlemodels.bj.bcebos.com/flowers/imagelabels.mat -o /root/.cache/paddle/dataset/flowers/102flowers.tgz &&\
+#    wget http://paddlemodels.bj.bcebos.com/flowers/setid.mat -o /root/.cache/paddle/dataset/flowers/102flowers.tgz
+#
+COPY flowers /root/.cache/paddle/dataset/
+
+CMD ["python","-m","paddle.distributed.launch","--backend","heter","train_fleet_dygraph_heter.py"]
