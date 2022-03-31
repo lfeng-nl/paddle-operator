@@ -1,0 +1,41 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: paddle-resnet
+spec:
+  template:
+    spec:
+      containers:
+      - name: paddle
+        image: registry.baidubce.com/paddle-operator/demo-resnet:new-launch
+        imagePullPolicy: Always
+        command: ["python","-m","paddle.distributed.launch","/home/demo/train-demo.py"]
+        #command: ["sleep", "1h"]
+        env:
+        - name: PADDLE_NNODES
+          value: "2" # equals to parallelism
+        - name: PADDLE_MASTER
+          value: etcd://paddle-elastic-etcd:2379
+        volumeMounts:
+        - name: train-demo
+          mountPath: /home/demo
+        - mountPath: /dev/shm
+          name: dshm
+        resources:
+          limits:
+            nvidia.com/gpu: 2
+      restartPolicy: Never
+      volumes:
+      - name: dshm
+        emptyDir:
+          medium: Memory
+      - name: train-demo
+        configMap:
+          name: paddle-demo
+          items:
+          - key: train-demo
+            path: train-demo.py
+  backoffLimit: 1
+  parallelism: 2
+
+
